@@ -15,6 +15,7 @@ class DriveConfigRequest(BaseModel):
 class DriveConfigUpdateRequest(BaseModel):
     cleanup_enabled: Optional[bool] = None
     cleanup_keep_count: Optional[int] = None
+    compression_quality: Optional[int] = None
 
 
 class DriveConfigResponse(BaseModel):
@@ -23,6 +24,7 @@ class DriveConfigResponse(BaseModel):
     is_active: bool
     cleanup_enabled: bool = False
     cleanup_keep_count: int = 50
+    compression_quality: int = 88
     created_at: datetime
 
     class Config:

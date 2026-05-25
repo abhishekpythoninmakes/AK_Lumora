@@ -208,3 +208,9 @@ async def create_tables():
             await conn.execute(text("ALTER TABLE watched_folders ADD COLUMN cleanup_keep_count INTEGER DEFAULT 50"))
     except Exception:
         pass
+
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(text("ALTER TABLE drive_configs ADD COLUMN compression_quality INTEGER DEFAULT 88"))
+    except Exception:
+        pass

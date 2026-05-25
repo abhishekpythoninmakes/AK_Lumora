@@ -157,6 +157,7 @@ async def list_accounts(user_id: int, db: AsyncSession = Depends(get_db)):
                 "usage_alert": usage_alert,
                 "cleanup_enabled": config.cleanup_enabled,
                 "cleanup_keep_count": config.cleanup_keep_count,
+                "compression_quality": config.compression_quality,
             }
         )
     accounts.sort(key=lambda a: (not a.get("connected", False), a.get("email", "")))
@@ -197,6 +198,7 @@ async def get_drive_status(user_id: int, drive_config_id: int, db: AsyncSession 
         "usage_percent": usage_percent,
         "cleanup_enabled": config.cleanup_enabled,
         "cleanup_keep_count": config.cleanup_keep_count,
+        "compression_quality": config.compression_quality,
     }
 
 
@@ -258,6 +260,8 @@ async def update_drive_config(
         config.cleanup_enabled = request.cleanup_enabled
     if request.cleanup_keep_count is not None:
         config.cleanup_keep_count = request.cleanup_keep_count
+    if request.compression_quality is not None:
+        config.compression_quality = request.compression_quality
         
     await db.flush()
     return DriveConfigResponse.model_validate(config)

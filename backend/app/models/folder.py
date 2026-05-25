@@ -23,6 +23,9 @@ class DriveConfig(Base):
     cleanup_enabled = Column(Boolean, default=False)
     cleanup_keep_count = Column(Integer, default=50)
 
+    # Image Upload Compression Quality (percentage value, e.g. 88)
+    compression_quality = Column(Integer, default=88)
+
     created_at = Column(
         DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False
     )

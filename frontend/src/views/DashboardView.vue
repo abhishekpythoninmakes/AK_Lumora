@@ -72,6 +72,108 @@
           </div>
         </div>
 
+        <!-- Live Compression Engine Settings Card -->
+        <div class="compression-settings-panel glass-card" v-if="activeMenu === 'dashboard'" style="margin-top: var(--space-xl); padding: var(--space-xl); border: 1px solid rgba(108, 99, 255, 0.15); position: relative; overflow: hidden;">
+          <div class="panel-header flex-between" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-md); margin-bottom: var(--space-md);">
+            <div>
+              <h3 style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: var(--text-lg); color: #fff;">
+                <span class="pulse-dot" :style="{ background: qualityMetrics.statusColor, boxShadow: `0 0 8px ${qualityMetrics.statusColor}` }" style="transition: all 0.3s; width: 8px; height: 8px; border-radius: 50%; display: inline-block;"></span>
+                ⚡ Image Compression Quality Control
+              </h3>
+              <p style="font-size: var(--text-xs); color: var(--text-tertiary); margin: 4px 0 0 0;">
+                Configures real-time client-side JPEG quality before upload. Saves instantly as you slide.
+              </p>
+            </div>
+            
+            <div class="saving-badge-glow" :style="{ background: qualityMetrics.statusColor + '1a', borderColor: qualityMetrics.statusColor + '40', color: qualityMetrics.statusColor }" style="padding: 4px 12px; border-radius: var(--radius-full); font-size: 10px; font-weight: 800; border: 1px solid; letter-spacing: 0.05em; text-transform: uppercase; transition: all 0.3s;">
+              {{ qualityMetrics.badge }}
+            </div>
+          </div>
+
+          <!-- Interactive Control Row -->
+          <div class="compression-slider-row" style="display: grid; grid-template-columns: 1fr 180px; gap: var(--space-xl); align-items: center; margin-bottom: var(--space-lg);">
+            <!-- Left: Range input & Dynamic Percentage display -->
+            <div class="slider-container" style="display: flex; align-items: center; gap: var(--space-lg); width: 100%;">
+              <input 
+                type="range" 
+                min="10" 
+                max="100" 
+                step="1"
+                v-model.number="compQualityPercent" 
+                @input="updateCompressionQualityLive" 
+                class="quality-range-slider" 
+                style="flex: 1; height: 6px; border-radius: 4px; outline: none; background: rgba(255,255,255,0.08); cursor: pointer; transition: all 0.3s;"
+              />
+              <div class="quality-display-box glass-card" style="padding: var(--space-sm) var(--space-md); text-align: center; min-width: 90px; border-color: rgba(108,99,255,0.25); background: rgba(108,99,255,0.04);">
+                <strong class="gradient-text-branding" style="font-size: var(--text-xl); font-weight: 800; display: block; font-family: var(--font-mono);">
+                  {{ compQualityPercent }}%
+                </strong>
+                <span style="font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Quality</span>
+              </div>
+            </div>
+            
+            <!-- Right: Live Cloud Saved status -->
+            <div class="cloud-status-indicator flex-center" style="display: flex; align-items: center; gap: 8px; justify-content: flex-end; font-size: var(--text-xs); color: var(--text-secondary);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" style="animation: spin 3s linear infinite;" v-if="qualityUpdateDebouncer"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" v-else><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <span>{{ qualityUpdateDebouncer ? 'Syncing...' : 'Saved lively to cloud' }}</span>
+            </div>
+          </div>
+
+          <!-- Dynamic Visual Analytics Grid -->
+          <div class="compression-specs-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-md);">
+            <!-- Card 1: Estimated Compression Saving -->
+            <div class="spec-card glass-card" style="padding: var(--space-md); text-align: left; background: rgba(255,255,255,0.01);">
+              <span style="font-size: 10px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px;">Est. Size Reduction</span>
+              <strong :style="{ color: qualityMetrics.savingColor }" style="font-size: var(--text-lg); font-weight: 700; display: block; margin-bottom: 4px; transition: color 0.3s;">
+                {{ qualityMetrics.saving }}
+              </strong>
+              <p style="font-size: var(--text-2xs); color: var(--text-secondary); margin: 0; line-height: 1.3;">
+                {{ qualityMetrics.desc }}
+              </p>
+            </div>
+
+            <!-- Card 2: Suitable Devices & Screen Examples -->
+            <div class="spec-card glass-card" style="padding: var(--space-md); text-align: left; background: rgba(255,255,255,0.01);">
+              <span style="font-size: 10px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px;">Target Device & Screen</span>
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                <span style="font-size: var(--text-md); animation: arrowBounce 1.5s infinite ease-in-out; display: inline-block;">🖥️</span>
+                <strong style="font-size: var(--text-xs); color: #fff; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px;" :title="qualityMetrics.devices">
+                  {{ qualityMetrics.devices.split(',')[0] }}
+                </strong>
+              </div>
+              <p style="font-size: var(--text-2xs); color: var(--text-secondary); margin: 0; line-height: 1.3;">
+                Optimized for: {{ qualityMetrics.devices }}
+              </p>
+            </div>
+
+            <!-- Card 3: Target Social Use Case -->
+            <div class="spec-card glass-card" style="padding: var(--space-md); text-align: left; background: rgba(255,255,255,0.01);">
+              <span style="font-size: 10px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px;">Primary Use Cases</span>
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                <span style="font-size: var(--text-md); animation: scrollWheel 1.5s infinite ease-in-out; display: inline-block;">📱</span>
+                <strong style="font-size: var(--text-xs); color: #fff; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px;" :title="qualityMetrics.useCases">
+                  {{ qualityMetrics.useCases.split(',')[0] }}
+                </strong>
+              </div>
+              <p style="font-size: var(--text-2xs); color: var(--text-secondary); margin: 0; line-height: 1.3;">
+                Suits: {{ qualityMetrics.useCases }}
+              </p>
+            </div>
+
+            <!-- Card 4: Simulated Resolution Example -->
+            <div class="spec-card glass-card" style="padding: var(--space-md); text-align: left; background: rgba(255,255,255,0.01);">
+              <span style="font-size: 10px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px;">Simulated Resolution</span>
+              <strong style="font-size: var(--text-sm); color: #fff; font-weight: 700; display: block; margin-bottom: 4px;">
+                {{ qualityMetrics.simulatedResolution }}
+              </strong>
+              <div class="resolution-sim-bar" style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; position: relative; overflow: hidden; margin-top: 8px;">
+                <div class="res-bar-fill" :style="{ width: compQualityPercent + '%', background: qualityMetrics.statusColor }" style="height: 100%; transition: width 0.3s, background-color 0.3s;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
 
 
         <!-- Folders Section -->
@@ -740,6 +842,62 @@ const filterTo = ref('')
 const uploadChart = ref(null)
 const statusChart = ref(null)
 
+const compQualityPercent = ref(88)
+
+// Dynamic visual data based on quality percentage
+const qualityMetrics = computed(() => {
+  const q = compQualityPercent.value
+  if (q >= 95) {
+    return {
+      tier: 'Ultra Quality (Lossless)',
+      desc: 'Extremely high fidelity. Practically identical to the raw source. Perfect for professional review and large-format displays.',
+      saving: '2.5x Space Saved',
+      devices: 'Retina MacBook Pro, 4K UHD Monitors, Print Proofs, Large iPads',
+      useCases: 'High-end Portfolio, Fine Art Previews, Commercial Presentations',
+      simulatedResolution: '3840px (Ultra 4K UHD)',
+      statusColor: '#10B981', // green
+      savingColor: '#34D399',
+      badge: 'PRO EXCELLENT'
+    }
+  } else if (q >= 85) {
+    return {
+      tier: 'High Definition (Recommended)',
+      desc: 'Superb balance of details and file size. Indistinguishable from original JPEGs to the naked eye.',
+      saving: '5x - 7x Space Saved',
+      devices: 'iPhone Retina Screen, High-End Laptops, Tablets, Social Media Feeds',
+      useCases: 'Instagram Feed, Facebook Album, Client Proofing, Real-time Slideshows',
+      simulatedResolution: '2560px (Superb HD)',
+      statusColor: '#6C63FF', // brand blue
+      savingColor: '#818CF8',
+      badge: 'BALANCED PRO'
+    }
+  } else if (q >= 70) {
+    return {
+      tier: 'Balanced Web Performance',
+      desc: 'Very lightweight files. Very fast upload speeds. Slight compression artifacts may appear only under high zoom.',
+      saving: '8x - 12x Space Saved',
+      devices: 'Mid-range Smartphones, Standard Laptops, Social Feed Carousels',
+      useCases: 'Fast WhatsApp Proofing, Casual Social Sharing, Quick Client Previews',
+      simulatedResolution: '1920px (Full HD)',
+      statusColor: '#F59E0B', // yellow
+      savingColor: '#FBBF24',
+      badge: 'SPEED BOOST'
+    }
+  } else {
+    return {
+      tier: 'High Performance / Speed Priority',
+      desc: 'Aggressive compression designed for lightning-fast uploads over extremely weak cellular data or spotty wedding Wi-Fi.',
+      saving: '15x - 20x Space Saved',
+      devices: 'Budget Mobile Devices, Weak Wi-Fi Receivers, Cellular Streams',
+      useCases: 'Emergency Spot Sync, Offline Area Proofing, Ultra-low bandwidth uploads',
+      simulatedResolution: '1200px (Web Optimized)',
+      statusColor: '#EF4444', // red
+      savingColor: '#F87171',
+      badge: 'MAX VELOCITY'
+    }
+  }
+})
+
 const syncQueue = ref([])
 const activeSyncCount = computed(() => syncQueue.value.filter(item => ['analyzing', 'compressing', 'resuming', 'uploading'].includes(item.stage)).length)
 const queuedSyncCount = computed(() => syncQueue.value.filter(item => item.stage === 'detected').length)
@@ -1322,11 +1480,12 @@ async function runUploadWorker(queueItem) {
     queueItem.progress = 40
 
     try {
+      const compQuality = (compQualityPercent.value || 88) / 100;
       const options = {
         maxSizeMB: 1.5,
         maxWidthOrHeight: 2560,
         useWebWorker: true,
-        initialQuality: 0.88,
+        initialQuality: compQuality,
         fileType: 'image/jpeg',
         exifOrientation: true
       };
@@ -1554,6 +1713,11 @@ function initCharts() {
 onMounted(async () => {
   setActiveMenu(route.params.section)
   if (authStore.showTutorial) showTutorial.value = true
+
+  const savedQuality = localStorage.getItem('ak_fallback_compression_quality')
+  if (savedQuality) {
+    compQualityPercent.value = parseInt(savedQuality, 10)
+  }
 
   // ✅ Set the frontend file watcher callback
   folderWatcher.setCallback(onNewFileDetected)
@@ -1828,6 +1992,50 @@ async function configureFolderCleanup(folder) {
     }
   }
 }
+
+const qualityUpdateDebouncer = ref(null)
+
+async function updateCompressionQualityLive() {
+  const userId = getCurrentUserId()
+  if (driveStatus.value) {
+    driveStatus.value.compression_quality = compQualityPercent.value
+  }
+  
+  // Debounce backend saving so we don't spam requests while sliding
+  if (qualityUpdateDebouncer.value) clearTimeout(qualityUpdateDebouncer.value)
+  qualityUpdateDebouncer.value = setTimeout(async () => {
+    if (userId && selectedDriveConfigId.value) {
+      try {
+        await api.put(
+          `/api/drive/config/${selectedDriveConfigId.value}?user_id=${userId}`,
+          {
+            compression_quality: compQualityPercent.value
+          }
+        )
+        // Also update local list status
+        const matched = connectedAccounts.value.find(a => a.id === selectedDriveConfigId.value)
+        if (matched) {
+          matched.compression_quality = compQualityPercent.value
+        }
+        showToast(`Compression quality saved: ${compQualityPercent.value}% ⚡`, 'success')
+      } catch (err) {
+        console.warn('Failed to save compression quality to backend:', err)
+      } finally {
+        qualityUpdateDebouncer.value = null
+      }
+    } else {
+      // Save in localStorage if not connected
+      localStorage.setItem('ak_fallback_compression_quality', String(compQualityPercent.value))
+      qualityUpdateDebouncer.value = null
+    }
+  }, 400)
+}
+
+watch(() => driveStatus.value?.compression_quality, (newVal) => {
+  if (newVal !== undefined && newVal !== null) {
+    compQualityPercent.value = newVal
+  }
+})
 
 onUnmounted(() => {
   stopStatsPolling()
@@ -3126,5 +3334,52 @@ input:checked + .slider-round:before {
   transform: translateX(20px);
   background-color: var(--color-primary-light);
   box-shadow: 0 0 8px var(--color-primary);
+}
+
+/* Quality Range Slider styling */
+.quality-range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.quality-range-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+
+.quality-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  border: 2px solid #fff;
+  cursor: pointer;
+  margin-top: -6px;
+  box-shadow: 0 0 10px var(--color-primary);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.quality-range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 15px var(--color-primary-light);
+}
+
+.quality-range-slider::-moz-range-thumb {
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  border: 2px solid #fff;
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--color-primary);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.quality-range-slider::-moz-range-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 15px var(--color-primary-light);
 }
 </style>
