@@ -154,6 +154,18 @@
         </div>
       </div>
 
+      <!-- Modern Scroll Indicator -->
+      <div class="scroll-indicator" ref="scrollIndicator" @click="scrollToFeatures">
+        <div class="mouse-icon">
+          <span class="mouse-wheel"></span>
+        </div>
+        <div class="scroll-arrow">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+      </div>
+
       <!-- Floating Camera Elements -->
       <div class="floating-elements" aria-hidden="true">
         <div class="float-el float-el-1 float">
@@ -368,6 +380,7 @@ const heroActions = ref(null)
 const heroStats = ref(null)
 const heroBadge = ref(null)
 const heroMockup = ref(null)
+const scrollIndicator = ref(null)
 
 const isAnnual = ref(false)
 
@@ -491,6 +504,7 @@ onMounted(() => {
     .from(heroActions.value, { y: 20, opacity: 0, duration: 0.5 }, '-=0.3')
     .from(heroStats.value?.children || [], { y: 30, opacity: 0, duration: 0.5, stagger: 0.1 }, '-=0.2')
     .from(heroMockup.value, { y: 60, opacity: 0, duration: 1, scale: 0.96 }, '-=0.4')
+    .from(scrollIndicator.value, { y: 15, opacity: 0, duration: 0.5 }, '-=0.5')
 
   // GSAP pricing card scroll trigger observer for smooth modern entrance animation
   const pricingSection = document.getElementById('pricing')
@@ -1248,6 +1262,92 @@ onUnmounted(() => {
   }
   100% {
     transform: translateX(-50%);
+  }
+}
+
+/* Modern Scroll Indicator */
+.scroll-indicator {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: opacity var(--transition-normal);
+}
+
+.mouse-icon {
+  width: 26px;
+  height: 40px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 13px;
+  position: relative;
+  margin-bottom: 6px;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.mouse-wheel {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 8px;
+  background: var(--color-primary-light);
+  border-radius: 2px;
+  animation: scrollWheel 2s infinite ease-in-out;
+}
+
+.scroll-arrow {
+  color: var(--text-tertiary);
+  animation: arrowBounce 2s infinite ease-in-out;
+  transition: color var(--transition-fast), transform var(--transition-fast);
+  display: flex;
+  justify-content: center;
+}
+
+.scroll-indicator:hover .mouse-icon {
+  border-color: var(--color-primary-light);
+  box-shadow: 0 0 10px rgba(108, 99, 255, 0.25);
+}
+
+.scroll-indicator:hover .scroll-arrow {
+  color: var(--text-primary);
+}
+
+@keyframes scrollWheel {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0);
+  }
+  20% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-50%, 8px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
+
+@keyframes arrowBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+@media (max-width: 768px) {
+  .scroll-indicator {
+    bottom: 20px; /* Adjust spacing on mobile */
   }
 }
 </style>
