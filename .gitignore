@@ -1,0 +1,50 @@
+# .gitignore
+
+# Environment variables
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
+env/
+.venv/
+
+# Node / JS
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+backend/qdrant_data/
+
+# Specific user requests
+frontend/uploads/
+backend/uploads/
+old_code/
+client_secret_132817769739-bcgut3kdvem1pt1vtug3pbfrph9l31cj.apps.googleusercontent.com.json
+
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor directories and files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

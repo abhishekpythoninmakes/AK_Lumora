@@ -1,0 +1,121 @@
+/* ============================================
+   AK Lumora — Design System Variables
+   ============================================ */
+
+:root {
+  /* ── Color Palette ── */
+  --color-primary: #6C63FF;
+  --color-primary-light: #8B83FF;
+  --color-primary-dark: #4F46E5;
+  --color-secondary: #FF6B9D;
+  --color-secondary-light: #FF8BB5;
+  --color-accent: #00D2FF;
+  --color-accent-warm: #FFB347;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-info: #3B82F6;
+
+  /* ── Dark Theme ── */
+  --bg-primary: #0A0A1A;
+  --bg-secondary: #111127;
+  --bg-tertiary: #1A1A3E;
+  --bg-card: rgba(255, 255, 255, 0.03);
+  --bg-card-hover: rgba(255, 255, 255, 0.06);
+  --bg-glass: rgba(255, 255, 255, 0.05);
+  --bg-glass-strong: rgba(255, 255, 255, 0.08);
+
+  /* ── Text ── */
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-tertiary: #64748B;
+  --text-muted: #475569;
+  --text-on-primary: #FFFFFF;
+
+  /* ── Borders ── */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  --border-glow: rgba(108, 99, 255, 0.3);
+
+  /* ── Shadows ── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 20px rgba(108, 99, 255, 0.15);
+  --shadow-glow-strong: 0 0 40px rgba(108, 99, 255, 0.25);
+
+  /* ── Neumorphic Shadows ── */
+  --neu-shadow-light: -6px -6px 14px rgba(255, 255, 255, 0.03);
+  --neu-shadow-dark: 6px 6px 14px rgba(0, 0, 0, 0.4);
+  --neu-inset-light: inset -3px -3px 7px rgba(255, 255, 255, 0.03);
+  --neu-inset-dark: inset 3px 3px 7px rgba(0, 0, 0, 0.3);
+
+  /* ── Glassmorphism ── */
+  --glass-blur: 20px;
+  --glass-blur-strong: 40px;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.08);
+
+  /* ── Spacing ── */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  --space-4xl: 6rem;
+
+  /* ── Typography ── */
+  --font-primary: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-display: 'Outfit', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+  --text-6xl: 3.75rem;
+  --text-7xl: 4.5rem;
+
+  --leading-tight: 1.15;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+
+  /* ── Border Radius ── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-full: 9999px;
+
+  /* ── Transitions ── */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Z-Index ── */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 300;
+  --z-tooltip: 400;
+  --z-toast: 500;
+
+  /* ── Container ── */
+  --container-max: 1440px;
+  --sidebar-width: 280px;
+  --sidebar-collapsed: 72px;
+}
