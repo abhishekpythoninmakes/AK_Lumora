@@ -9,9 +9,13 @@
     <!-- Premium Glass Card Topbar -->
     <div class="topbar glass-card">
       <div class="topbar-left">
-        <h2 @click="showStudioDetailsModal = true" class="studio-trigger-title" title="View Studio Profile Details">
+        <h2 @click="showStudioDetailsModal = true" class="studio-trigger-title" title="View Studio Profile Details" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;">
           <span class="pulse-dot"></span>
           <span class="gradient-text-branding studio-glow-text">{{ currentUser?.studio_name || 'Live Studio' }}</span>
+          <span class="click-hint-badge">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display: inline-block; vertical-align: middle; margin-right: 2px;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <span class="hint-text">Click to view studio details & contact</span>
+          </span>
         </h2>
         <p>Real-time photo presentation</p>
       </div>
@@ -4388,6 +4392,67 @@ onUnmounted(() => {
 @media (max-width: 360px) {
   .studio-social-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Click Hint Badge next to Studio Name */
+.click-hint-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-primary-light);
+  background: rgba(108, 99, 255, 0.06);
+  border: 1px solid rgba(108, 99, 255, 0.15);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  margin-left: 4px;
+  vertical-align: middle;
+  cursor: pointer;
+  pointer-events: none;
+  box-shadow: 0 0 8px rgba(108, 99, 255, 0.05);
+  animation: badgePulse 2s infinite ease-in-out;
+  transition: all 0.3s ease;
+}
+
+@keyframes badgePulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(108, 99, 255, 0.05);
+    border-color: rgba(108, 99, 255, 0.15);
+    background: rgba(108, 99, 255, 0.06);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 0 14px rgba(108, 99, 255, 0.25);
+    border-color: rgba(108, 99, 255, 0.35);
+    background: rgba(108, 99, 255, 0.12);
+    color: #fff;
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(108, 99, 255, 0.05);
+    border-color: rgba(108, 99, 255, 0.15);
+    background: rgba(108, 99, 255, 0.06);
+  }
+}
+
+.studio-trigger-title:hover .click-hint-badge {
+  background: rgba(108, 99, 255, 0.2);
+  border-color: var(--color-primary-light);
+  color: #fff;
+  box-shadow: 0 0 15px rgba(108, 99, 255, 0.4);
+}
+
+@media (max-width: 640px) {
+  .click-hint-badge .hint-text {
+    display: none;
+  }
+  .click-hint-badge {
+    margin-left: 2px;
+    padding: 4px;
+    border-radius: 50%;
   }
 }
 </style>
