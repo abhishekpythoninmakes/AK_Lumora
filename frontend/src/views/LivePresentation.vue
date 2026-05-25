@@ -23,7 +23,14 @@
           <span>Get to Know Us More & Contact</span>
         </button>
       </div>
-      <div class="topbar-right">
+      <div class="topbar-right" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <!-- Page Limit Selector Dropdown -->
+        <div class="select-wrapper select-limit-wrapper">
+          <select v-model="perPage" class="input input-neu" style="min-width: 110px;" title="Set images limit per page">
+            <option v-for="n in [4, 5, 6, 7, 8, 9, 10]" :key="n" :value="n">{{ n }} images / page</option>
+          </select>
+        </div>
+
         <div class="select-wrapper">
           <select v-model="selectedFolderId" class="input input-neu" style="min-width: 150px;">
             <option value="">All Folders</option>
@@ -555,7 +562,7 @@ const currentUser = ref(null)
 const showStudioDetailsModal = ref(false)
 const studioImgError = ref(false)
 const page = ref(1)
-const perPage = 6
+const perPage = ref(6)
 const watchedTargetFolders = ref([])
 const images = ref([])
 const isWatching = ref(false)
@@ -1249,7 +1256,7 @@ async function loadFromDriveDirect(userId) {
   const params = new URLSearchParams({
     q,
     orderBy: 'createdTime desc',
-    pageSize: String(perPage),
+    pageSize: String(perPage.value),
     fields: 'files(id,name,mimeType,size,createdTime,thumbnailLink,webViewLink,webContentLink,parents),nextPageToken',
     includeItemsFromAllDrives: 'true',
     supportsAllDrives: 'true',
@@ -1429,7 +1436,7 @@ async function loadRecentUploads() {
       const token = page.value > 1 ? pageTokens.value[page.value - 1] : ''
       const params = new URLSearchParams({
         user_id: String(userId),
-        limit: String(perPage),
+        limit: String(perPage.value),
       })
       if (token) params.append('page_token', token)
       if (withFolderFilter && selectedFolderId.value) params.append('folder_id', selectedFolderId.value)
@@ -1590,6 +1597,14 @@ function handleVisibilityRefresh() {
 
 // Reset pagination when folder changes
 watch(selectedFolderId, () => {
+  page.value = 1
+  pageTokens.value = []
+  nextPageToken.value = null
+  loadRecentUploads()
+})
+
+// Reset pagination when page display limit changes
+watch(perPage, () => {
   page.value = 1
   pageTokens.value = []
   nextPageToken.value = null
