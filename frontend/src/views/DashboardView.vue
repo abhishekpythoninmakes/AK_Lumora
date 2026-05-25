@@ -72,18 +72,7 @@
           </div>
         </div>
 
-        <!-- Date Filter -->
-        <div class="filter-bar glass" v-if="activeMenu === 'dashboard'">
-          <div class="filter-group">
-            <label>From</label>
-            <input type="datetime-local" v-model="filterFrom" class="input input-neu" />
-          </div>
-          <div class="filter-group">
-            <label>To</label>
-            <input type="datetime-local" v-model="filterTo" class="input input-neu" />
-          </div>
-          <button class="btn btn-primary btn-sm" @click="refreshStats">Apply Filter</button>
-        </div>
+
 
         <!-- Folders Section -->
         <div v-if="activeMenu === 'folders'" class="folders-section">
