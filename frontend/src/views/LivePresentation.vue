@@ -8,16 +8,20 @@
 
     <!-- Premium Glass Card Topbar -->
     <div class="topbar glass-card">
-      <div class="topbar-left">
-        <h2 @click="showStudioDetailsModal = true" class="studio-trigger-title" title="View Studio Profile Details" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-          <span class="pulse-dot"></span>
-          <span class="gradient-text-branding studio-glow-text">{{ currentUser?.studio_name || 'Live Studio' }}</span>
-          <span class="click-hint-badge">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display: inline-block; vertical-align: middle; margin-right: 2px;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-            <span class="hint-text">Click to view studio details & contact</span>
-          </span>
-        </h2>
-        <p>Real-time photo presentation</p>
+      <div class="topbar-left" style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+        <div>
+          <h2 @click="showStudioDetailsModal = true" class="studio-trigger-title" title="View Studio Profile Details" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+            <span class="pulse-dot"></span>
+            <span class="gradient-text-branding studio-glow-text">{{ currentUser?.studio_name || 'Live Studio' }}</span>
+          </h2>
+          <p>Real-time photo presentation</p>
+        </div>
+        
+        <!-- Premium Pulsing Animated Explorer Button -->
+        <button @click="showStudioDetailsModal = true" class="btn-studio-explore animate-glow-button" title="Get to know us more & Contact studio profile" style="margin-top: 4px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          <span>Get to Know Us More & Contact</span>
+        </button>
       </div>
       <div class="topbar-right">
         <div class="select-wrapper">
@@ -4395,63 +4399,55 @@ onUnmounted(() => {
   }
 }
 
-/* Click Hint Badge next to Studio Name */
-.click-hint-badge {
+/* Premium explore/contact studio button */
+.btn-studio-explore {
+  background: linear-gradient(135deg, rgba(108, 99, 255, 0.08), rgba(6, 182, 212, 0.08));
+  border: 1px solid rgba(108, 99, 255, 0.3);
+  color: var(--color-primary-light);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  font-size: 11px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--color-primary-light);
-  background: rgba(108, 99, 255, 0.06);
-  border: 1px solid rgba(108, 99, 255, 0.15);
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
-  margin-left: 4px;
-  vertical-align: middle;
+  gap: 6px;
   cursor: pointer;
-  pointer-events: none;
-  box-shadow: 0 0 8px rgba(108, 99, 255, 0.05);
-  animation: badgePulse 2s infinite ease-in-out;
-  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(108, 99, 255, 0.06);
+  animation: exploreBtnGlow 2.5s infinite alternate ease-in-out;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
 }
 
-@keyframes badgePulse {
+.btn-studio-explore:hover {
+  background: linear-gradient(135deg, rgba(108, 99, 255, 0.2), rgba(6, 182, 212, 0.2));
+  border-color: var(--color-primary-light);
+  transform: translateY(-1px);
+  box-shadow: 0 0 25px rgba(108, 99, 255, 0.4);
+  color: #fff;
+}
+
+.btn-studio-explore:active {
+  transform: translateY(0);
+}
+
+@keyframes exploreBtnGlow {
   0% {
-    transform: scale(1);
     box-shadow: 0 0 8px rgba(108, 99, 255, 0.05);
-    border-color: rgba(108, 99, 255, 0.15);
-    background: rgba(108, 99, 255, 0.06);
-  }
-  50% {
-    transform: scale(1.03);
-    box-shadow: 0 0 14px rgba(108, 99, 255, 0.25);
-    border-color: rgba(108, 99, 255, 0.35);
-    background: rgba(108, 99, 255, 0.12);
-    color: #fff;
+    border-color: rgba(108, 99, 255, 0.25);
   }
   100% {
-    transform: scale(1);
-    box-shadow: 0 0 8px rgba(108, 99, 255, 0.05);
-    border-color: rgba(108, 99, 255, 0.15);
-    background: rgba(108, 99, 255, 0.06);
+    box-shadow: 0 0 18px rgba(6, 182, 212, 0.3), 0 0 4px rgba(108, 99, 255, 0.2);
+    border-color: var(--color-primary-light);
   }
-}
-
-.studio-trigger-title:hover .click-hint-badge {
-  background: rgba(108, 99, 255, 0.2);
-  border-color: var(--color-primary-light);
-  color: #fff;
-  box-shadow: 0 0 15px rgba(108, 99, 255, 0.4);
 }
 
 @media (max-width: 640px) {
-  .click-hint-badge .hint-text {
-    display: none;
+  .btn-studio-explore span {
+    display: none; /* Hide button text, only show icon on smaller mobile views to conserve topbar space */
   }
-  .click-hint-badge {
-    margin-left: 2px;
-    padding: 4px;
+  .btn-studio-explore {
+    padding: 6px;
     border-radius: 50%;
   }
 }
