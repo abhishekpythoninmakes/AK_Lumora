@@ -1480,40 +1480,49 @@ async function runUploadWorker(queueItem) {
     queueItem.progress = 40
 
     try {
-      let maxSizeMB = 1.5;
-      let maxWidthOrHeight = 2560;
+      const qVal = compQualityPercent.value !== undefined && compQualityPercent.value !== null ? compQualityPercent.value : 88;
+      
+      if (qVal < 98) {
+        // Build dynamic compression options based on the selected quality percent
+        let maxSizeMB = 1.5;
+        let maxWidthOrHeight = 2560;
+        let initialQuality = 0.85;
 
-      const qVal = compQualityPercent.value || 88;
-      if (qVal >= 100) {
-        maxSizeMB = 100.0;         // Allow up to 100MB files (pristine/uncompressed)
-        maxWidthOrHeight = 10000;  // Allow up to 10K resolution (virtually original)
-      } else if (qVal >= 95) {
-        maxSizeMB = 15.0;          // Allow up to 15MB files
-        maxWidthOrHeight = 3840;   // 4K UHD resolution limit
-      } else if (qVal >= 85) {
-        maxSizeMB = 5.0;           // Allow up to 5MB files
-        maxWidthOrHeight = 2560;   // 2.5K HD resolution limit
-      } else if (qVal >= 70) {
-        maxSizeMB = 2.0;
-        maxWidthOrHeight = 2048;   // 2K limit
+        if (qVal >= 90) {
+          maxSizeMB = 10.0;
+          maxWidthOrHeight = 4096;
+          initialQuality = qVal / 100; // e.g. 0.90 to 0.97
+        } else if (qVal >= 80) {
+          maxSizeMB = 3.0;
+          maxWidthOrHeight = 2560;
+          initialQuality = qVal / 100; // e.g. 0.80 to 0.89
+        } else if (qVal >= 50) {
+          maxSizeMB = 1.5;
+          maxWidthOrHeight = 1920;
+          initialQuality = qVal / 100; // e.g. 0.50 to 0.79
+        } else {
+          // Clamp initialQuality to 0.68 minimum to avoid browser canvas quantization blank/white screens,
+          // and instead safely reduce resolution and file size target.
+          maxSizeMB = 0.6;
+          maxWidthOrHeight = 1280;
+          initialQuality = 0.68;
+        }
+
+        const options = {
+          maxSizeMB,
+          maxWidthOrHeight,
+          useWebWorker: true,
+          initialQuality,
+          fileType: 'image/jpeg',
+          exifOrientation: true
+        };
+
+        const compressedBlob = await imageCompression(compressibleBlob, options);
+        compressibleBlob = compressedBlob;
+        mimeType = 'image/jpeg';
       } else {
-        maxSizeMB = 0.8;           // High compression: under 800KB
-        maxWidthOrHeight = 1600;   // Web friendly resolution limit
+        console.log('[Dashboard] Quality set to 100% (pristine mode). Skipping imageCompression engine.');
       }
-
-      const compQuality = qVal / 100;
-      const options = {
-        maxSizeMB: maxSizeMB,
-        maxWidthOrHeight: maxWidthOrHeight,
-        useWebWorker: true,
-        initialQuality: compQuality,
-        fileType: 'image/jpeg',
-        exifOrientation: true
-      };
-
-      const compressedBlob = await imageCompression(compressibleBlob, options);
-      compressibleBlob = compressedBlob;
-      mimeType = 'image/jpeg';
       
       if (!finalFileName.toLowerCase().endsWith('.jpg') && !finalFileName.toLowerCase().endsWith('.jpeg')) {
         finalFileName = finalFileName.replace(/\.[^/.]+$/, "") + ".jpg";

@@ -571,6 +571,7 @@ const pageTokens = ref([])
 const cacheBustSeed = ref(Date.now())
 const backendUnavailable = ref(false)
 const driveAuthInvalid = ref(false)
+const compQualityPercent = ref(88)
 
 // Social & Website URL computed properties for Live Presentation Studio details
 const instagramUrl = computed(() => {
@@ -1047,18 +1048,50 @@ async function runUploadWorker(queueItem) {
     queueItem.progress = 40
 
     try {
-      const options = {
-        maxSizeMB: 1.5,
-        maxWidthOrHeight: 2560,
-        useWebWorker: true,
-        initialQuality: 0.88,
-        fileType: 'image/jpeg',
-        exifOrientation: true
-      };
+      const qVal = compQualityPercent.value !== undefined && compQualityPercent.value !== null ? compQualityPercent.value : 88;
+      
+      if (qVal < 98) {
+        // Build dynamic compression options based on the selected quality percent
+        let maxSizeMB = 1.5;
+        let maxWidthOrHeight = 2560;
+        let initialQuality = 0.85;
 
-      const compressedBlob = await imageCompression(compressibleBlob, options);
-      blob = compressedBlob;
-      mimeType = 'image/jpeg';
+        if (qVal >= 90) {
+          maxSizeMB = 10.0;
+          maxWidthOrHeight = 4096;
+          initialQuality = qVal / 100; // e.g. 0.90 to 0.97
+        } else if (qVal >= 80) {
+          maxSizeMB = 3.0;
+          maxWidthOrHeight = 2560;
+          initialQuality = qVal / 100; // e.g. 0.80 to 0.89
+        } else if (qVal >= 50) {
+          maxSizeMB = 1.5;
+          maxWidthOrHeight = 1920;
+          initialQuality = qVal / 100; // e.g. 0.50 to 0.79
+        } else {
+          // Clamp initialQuality to 0.68 minimum to avoid browser canvas quantization blank/white screens,
+          // and instead safely reduce resolution and file size target.
+          maxSizeMB = 0.6;
+          maxWidthOrHeight = 1280;
+          initialQuality = 0.68;
+        }
+
+        const options = {
+          maxSizeMB,
+          maxWidthOrHeight,
+          useWebWorker: true,
+          initialQuality,
+          fileType: 'image/jpeg',
+          exifOrientation: true
+        };
+
+        const compressedBlob = await imageCompression(compressibleBlob, options);
+        blob = compressedBlob;
+        mimeType = 'image/jpeg';
+      } else {
+        console.log('[Live] Quality set to 100% (pristine mode). Skipping imageCompression engine.');
+        blob = compressibleBlob;
+      }
       
       if (!finalFileName.toLowerCase().endsWith('.jpg') && !finalFileName.toLowerCase().endsWith('.jpeg')) {
         finalFileName = finalFileName.replace(/\.[^/.]+$/, "") + ".jpg";
@@ -1562,6 +1595,26 @@ onMounted(async () => {
     currentUser.value = JSON.parse(localStorage.getItem('ak_user') || 'null')
   } catch (e) {
     console.error('Failed to parse user details from local storage:', e)
+  }
+
+  // Load image compression quality configurations dynamically
+  const savedQuality = localStorage.getItem('ak_fallback_compression_quality')
+  if (savedQuality) {
+    compQualityPercent.value = parseInt(savedQuality, 10)
+  }
+  const userId = currentUser.value?.id || JSON.parse(localStorage.getItem('ak_user') || '{}')?.id
+  if (userId) {
+    try {
+      const { data } = await api.get(`/api/drive/accounts?user_id=${userId}`)
+      if (data && data.length > 0) {
+        const activeAccount = data.find(a => a.active) || data[0]
+        if (activeAccount && activeAccount.compression_quality !== undefined && activeAccount.compression_quality !== null) {
+          compQualityPercent.value = activeAccount.compression_quality
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load compression quality from backend accounts:', e)
+    }
   }
 
   // Do not keep offline mode sticky forever across backend restarts.
