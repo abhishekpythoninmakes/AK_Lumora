@@ -183,3 +183,28 @@ async def create_tables():
             await conn.execute(text("ALTER TABLE users ADD COLUMN bio VARCHAR(1000)"))
     except Exception:
         pass
+
+    # Google Drive memory efficiency rolling automatic cleanup columns
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(text("ALTER TABLE drive_configs ADD COLUMN cleanup_enabled BOOLEAN DEFAULT FALSE"))
+    except Exception:
+        pass
+
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(text("ALTER TABLE drive_configs ADD COLUMN cleanup_keep_count INTEGER DEFAULT 50"))
+    except Exception:
+        pass
+
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(text("ALTER TABLE watched_folders ADD COLUMN cleanup_enabled BOOLEAN DEFAULT FALSE"))
+    except Exception:
+        pass
+
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(text("ALTER TABLE watched_folders ADD COLUMN cleanup_keep_count INTEGER DEFAULT 50"))
+    except Exception:
+        pass
