@@ -969,7 +969,7 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-xl);
-  align-items: stretch;
+  align-items: stretch !important;
   margin-top: var(--space-3xl);
 }
 
@@ -979,23 +979,32 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   position: relative;
-  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  height: 100%;
+  flex: 1;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 .pricing-card:hover {
-  transform: translateY(-8px);
-  box-shadow: var(--shadow-2xl), 0 20px 40px rgba(0, 0, 0, 0.4);
+  transform: translateY(-12px) scale(1.02);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(108, 99, 255, 0.4);
+  box-shadow: 0 20px 40px rgba(108, 99, 255, 0.15), 0 0 30px rgba(108, 99, 255, 0.08);
 }
 
 .popular-glow {
-  border: 1px solid rgba(255, 107, 157, 0.25) !important;
+  border: 1px solid rgba(255, 107, 157, 0.3) !important;
+  background: rgba(255, 255, 255, 0.03);
   box-shadow: 0 10px 30px rgba(255, 107, 157, 0.08), var(--shadow-glow);
 }
 
 .popular-glow:hover {
-  box-shadow: 0 15px 40px rgba(255, 107, 157, 0.15), var(--shadow-glow), 0 20px 45px rgba(0, 0, 0, 0.5);
+  transform: translateY(-14px) scale(1.03);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 107, 157, 0.6) !important;
+  box-shadow: 0 20px 45px rgba(255, 107, 157, 0.2), var(--shadow-glow), 0 25px 50px rgba(0, 0, 0, 0.5);
 }
 
 .popular-badge {
@@ -1138,6 +1147,7 @@ onUnmounted(() => {
 
 .pricing-section .btn-block {
   width: 100%;
+  margin-top: auto;
 }
 
 @media (max-width: 1024px) {
