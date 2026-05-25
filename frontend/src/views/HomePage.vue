@@ -506,25 +506,6 @@ onMounted(() => {
     .from(heroMockup.value, { y: 60, opacity: 0, duration: 1, scale: 0.96 }, '-=0.4')
     .from(scrollIndicator.value, { y: 15, opacity: 0, duration: 0.5 }, '-=0.5')
 
-  // GSAP pricing card scroll trigger observer for smooth modern entrance animation
-  const pricingSection = document.getElementById('pricing')
-  if (pricingSection) {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          gsap.from('.pricing-card', {
-            y: 50,
-            opacity: 0,
-            duration: 0.8,
-            stagger: 0.15,
-            ease: 'power3.out'
-          })
-          observer.disconnect() // Run once
-        }
-      })
-    }, { threshold: 0.1 })
-    observer.observe(pricingSection)
-  }
 })
 
 onUnmounted(() => {
