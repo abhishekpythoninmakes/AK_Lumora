@@ -1480,10 +1480,31 @@ async function runUploadWorker(queueItem) {
     queueItem.progress = 40
 
     try {
-      const compQuality = (compQualityPercent.value || 88) / 100;
+      let maxSizeMB = 1.5;
+      let maxWidthOrHeight = 2560;
+
+      const qVal = compQualityPercent.value || 88;
+      if (qVal >= 100) {
+        maxSizeMB = 100.0;         // Allow up to 100MB files (pristine/uncompressed)
+        maxWidthOrHeight = 10000;  // Allow up to 10K resolution (virtually original)
+      } else if (qVal >= 95) {
+        maxSizeMB = 15.0;          // Allow up to 15MB files
+        maxWidthOrHeight = 3840;   // 4K UHD resolution limit
+      } else if (qVal >= 85) {
+        maxSizeMB = 5.0;           // Allow up to 5MB files
+        maxWidthOrHeight = 2560;   // 2.5K HD resolution limit
+      } else if (qVal >= 70) {
+        maxSizeMB = 2.0;
+        maxWidthOrHeight = 2048;   // 2K limit
+      } else {
+        maxSizeMB = 0.8;           // High compression: under 800KB
+        maxWidthOrHeight = 1600;   // Web friendly resolution limit
+      }
+
+      const compQuality = qVal / 100;
       const options = {
-        maxSizeMB: 1.5,
-        maxWidthOrHeight: 2560,
+        maxSizeMB: maxSizeMB,
+        maxWidthOrHeight: maxWidthOrHeight,
         useWebWorker: true,
         initialQuality: compQuality,
         fileType: 'image/jpeg',
