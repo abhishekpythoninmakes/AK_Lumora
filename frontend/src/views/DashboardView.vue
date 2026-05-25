@@ -129,9 +129,20 @@
               </div>
               <div class="folder-drive" v-if="folder.drive_folder_name">
                 <label>Drive Target Folder</label>
-                <div class="detail-value" style="font-size: var(--text-sm); color: var(--text-secondary);">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: middle;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                  {{ folder.drive_folder_name }}
+                <div class="detail-value flex-between" style="font-size: var(--text-sm); color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                  <div>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: middle;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                    {{ folder.drive_folder_name }}
+                  </div>
+                  
+                  <div class="folder-cleanup-badge-container" style="display: flex; align-items: center; gap: 6px;">
+                    <span class="badge" :class="folder.cleanup_enabled ? 'badge-success' : 'badge-neutral'" style="font-size: 10px; padding: 2px 8px;">
+                      {{ folder.cleanup_enabled ? `Cleanup: Keep ${folder.cleanup_keep_count}` : 'Global Cleanup' }}
+                    </span>
+                    <button class="btn btn-xs btn-ghost ripple" @click="configureFolderCleanup(folder)" style="padding: 2px 6px; font-size: 10px; line-height: 1.2; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02);">
+                      ⚙️ Configure
+                    </button>
+                  </div>
                 </div>
               </div>
               <!-- Sync Queue List for this folder -->
@@ -327,6 +338,49 @@
                       <span class="cloud-folder-name">{{ folder.name }}</span>
                     </li>
                   </ul>
+                </div>
+
+                <!-- Google Drive Memory Efficiency Section -->
+                <div class="drive-folders-list-section glass-card" style="margin-top: var(--space-lg);">
+                  <div class="folders-header-row flex-between" style="display: flex; align-items: center; justify-content: space-between;">
+                    <h4 class="gradient-text-branding" style="margin: 0; font-size: var(--text-md);">Google Drive Memory Efficiency</h4>
+                    <span class="badge" :class="driveStatus?.cleanup_enabled ? 'badge-success' : 'badge-warning'" style="margin-left: var(--space-xs);">
+                      {{ driveStatus?.cleanup_enabled ? 'Active' : 'Inactive' }}
+                    </span>
+                  </div>
+                  
+                  <p style="font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: var(--space-md); line-height: 1.5; margin-top: var(--space-xs);">
+                    Prune old files automatically to stay under your Google Drive storage limits. When a target folder exceeds your set rolling deletion limit, the oldest images will be permanently removed (like a stack/FIFO concept).
+                  </p>
+
+                  <div class="cleanup-control-group flex-between" style="padding: var(--space-sm); background: rgba(255,255,255,0.02); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--border-subtle);">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                      <span style="font-size: var(--text-sm); font-weight: 600; color: var(--text-primary);">Enable Automatic Cleanup</span>
+                      <span style="font-size: var(--text-xs); color: var(--text-tertiary);">Prune oldest files on new uploads</span>
+                    </div>
+                    
+                    <!-- Sleek Toggle Switch -->
+                    <label class="switch-toggle">
+                      <input type="checkbox" :checked="driveStatus?.cleanup_enabled" @change="toggleGlobalCleanup" />
+                      <span class="slider-round"></span>
+                    </label>
+                  </div>
+
+                  <div v-if="driveStatus?.cleanup_enabled" class="cleanup-settings-block" style="margin-top: var(--space-md); padding: var(--space-md); background: rgba(108,99,255,0.04); border-radius: var(--radius-md); border: 1px dashed rgba(108,99,255,0.25);">
+                    <div class="flex-between" style="display: flex; align-items: center; justify-content: space-between;">
+                      <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <span style="font-size: var(--text-xs); color: var(--text-secondary);">Target Folder Rolling Limit</span>
+                        <strong style="font-size: var(--text-lg); color: var(--color-primary-light);">{{ driveStatus?.cleanup_keep_count }} images</strong>
+                      </div>
+                      <button class="btn btn-xs btn-primary ripple" @click="changeGlobalCleanupLimit" style="padding: 6px 12px; font-size: 11px;">
+                        Change Limit
+                      </button>
+                    </div>
+                    <p style="font-size: var(--text-2xs); color: var(--text-tertiary); margin-top: 8px; line-height: 1.4; display: flex; gap: 4px; align-items: flex-start;">
+                      <span>⚠️</span>
+                      <span>By enabling this feature, folders configured with watch connections will automatically delete files above your threshold limit. Be sure to take necessary backups beforehand! Only targeted watch folders will be affected.</span>
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1582,6 +1636,210 @@ watch([filterFrom, filterTo], async () => {
   } catch { /* ignore */ }
 })
 
+// Google Drive rolling automatic cleanup memory efficiency handlers
+async function toggleGlobalCleanup(e) {
+  const checked = e.target.checked
+  const userId = getCurrentUserId()
+  if (!userId || !selectedDriveConfigId.value) {
+    showToast('Please connect a Google Drive account first', 'warning')
+    e.target.checked = false
+    return
+  }
+
+  if (checked) {
+    const confirmed = confirm(
+      "By enabling this feature, the images in the drive folders will be automatically deleted based on the rolling deletion number you had setted so be aware of it or take necessary backup steps"
+    )
+    if (!confirmed) {
+      e.target.checked = false
+      return
+    }
+
+    const keepLimit = prompt(
+      "Please specify the number of images to keep in targeted folders:",
+      driveStatus.value?.cleanup_keep_count || "50"
+    )
+    
+    if (keepLimit === null) {
+      e.target.checked = false
+      return
+    }
+
+    const count = parseInt(keepLimit, 10)
+    if (isNaN(count) || count <= 0) {
+      showToast('Please enter a valid positive number', 'error')
+      e.target.checked = false
+      return
+    }
+
+    try {
+      await api.put(
+        `/api/drive/config/${selectedDriveConfigId.value}?user_id=${userId}`,
+        {
+          cleanup_enabled: true,
+          cleanup_keep_count: count
+        }
+      )
+      if (driveStatus.value) {
+        driveStatus.value.cleanup_enabled = true
+        driveStatus.value.cleanup_keep_count = count
+      }
+      const matched = connectedAccounts.value.find(a => a.id === selectedDriveConfigId.value)
+      if (matched) {
+        matched.cleanup_enabled = true
+        matched.cleanup_keep_count = count
+      }
+      showToast(`Automatic rolling cleanup enabled (Limit: ${count}) 🔄`, 'success')
+    } catch (err) {
+      e.target.checked = false
+      showToast(err.response?.data?.detail || 'Failed to update memory settings', 'error')
+    }
+  } else {
+    try {
+      await api.put(
+        `/api/drive/config/${selectedDriveConfigId.value}?user_id=${userId}`,
+        {
+          cleanup_enabled: false
+        }
+      )
+      if (driveStatus.value) {
+        driveStatus.value.cleanup_enabled = false
+      }
+      const matched = connectedAccounts.value.find(a => a.id === selectedDriveConfigId.value)
+      if (matched) {
+        matched.cleanup_enabled = false
+      }
+      showToast('Automatic rolling cleanup disabled', 'info')
+    } catch (err) {
+      e.target.checked = true
+      showToast(err.response?.data?.detail || 'Failed to disable memory settings', 'error')
+    }
+  }
+}
+
+async function changeGlobalCleanupLimit() {
+  const userId = getCurrentUserId()
+  if (!userId || !selectedDriveConfigId.value) return
+
+  const keepLimit = prompt(
+    "Specify the number of images to keep in targeted folders:",
+    driveStatus.value?.cleanup_keep_count || "50"
+  )
+  
+  if (keepLimit === null) return
+
+  const count = parseInt(keepLimit, 10)
+  if (isNaN(count) || count <= 0) {
+    showToast('Please enter a valid positive number', 'error')
+    return
+  }
+
+  try {
+    await api.put(
+      `/api/drive/config/${selectedDriveConfigId.value}?user_id=${userId}`,
+      {
+        cleanup_keep_count: count
+      }
+    )
+    if (driveStatus.value) {
+      driveStatus.value.cleanup_keep_count = count
+    }
+    const matched = connectedAccounts.value.find(a => a.id === selectedDriveConfigId.value)
+    if (matched) {
+      matched.cleanup_keep_count = count
+    }
+    showToast(`Memory limit updated to ${count} images! 🔄`, 'success')
+  } catch (err) {
+    showToast(err.response?.data?.detail || 'Failed to update keep limit', 'error')
+  }
+}
+
+async function configureFolderCleanup(folder) {
+  const userId = getCurrentUserId()
+  if (!userId) return
+
+  const isCurrentlyEnabled = folder.cleanup_enabled
+
+  if (!isCurrentlyEnabled) {
+    const confirmed = confirm(
+      "By enabling this feature, the images in the drive folders will be automatically deleted based on the rolling deletion number you had setted so be aware of it or take necessary backup steps"
+    )
+    if (!confirmed) return
+
+    const keepLimit = prompt(
+      `Set folder-specific rolling cleanup keep count for "${folder.folder_name}":`,
+      folder.cleanup_keep_count || "50"
+    )
+    if (keepLimit === null) return
+
+    const count = parseInt(keepLimit, 10)
+    if (isNaN(count) || count <= 0) {
+      showToast('Please enter a valid positive number', 'error')
+      return
+    }
+
+    try {
+      await api.put(
+        `/api/folders/${folder.id}?user_id=${userId}`,
+        {
+          cleanup_enabled: true,
+          cleanup_keep_count: count
+        }
+      )
+      folder.cleanup_enabled = true
+      folder.cleanup_keep_count = count
+      showToast(`Custom cleanup enabled for "${folder.folder_name}" (Limit: ${count}) 🔄`, 'success')
+    } catch (err) {
+      showToast(err.response?.data?.detail || 'Failed to enable folder custom cleanup', 'error')
+    }
+  } else {
+    const choice = confirm(
+      `Custom cleanup is currently active for "${folder.folder_name}" with a limit of ${folder.cleanup_keep_count} images.\n\n` +
+      `Click OK to change the limit, or Cancel to disable custom cleanup entirely for this folder.`
+    )
+
+    if (choice) {
+      const keepLimit = prompt(
+        `Update custom cleanup keep count for "${folder.folder_name}":`,
+        folder.cleanup_keep_count || "50"
+      )
+      if (keepLimit === null) return
+
+      const count = parseInt(keepLimit, 10)
+      if (isNaN(count) || count <= 0) {
+        showToast('Please enter a valid positive number', 'error')
+        return
+      }
+
+      try {
+        await api.put(
+          `/api/folders/${folder.id}?user_id=${userId}`,
+          {
+            cleanup_keep_count: count
+          }
+        )
+        folder.cleanup_keep_count = count
+        showToast(`Folder limit updated to ${count}! 🔄`, 'success')
+      } catch (err) {
+        showToast(err.response?.data?.detail || 'Failed to update folder limit', 'error')
+      }
+    } else {
+      try {
+        await api.put(
+          `/api/folders/${folder.id}?user_id=${userId}`,
+          {
+            cleanup_enabled: false
+          }
+        )
+        folder.cleanup_enabled = false
+        showToast(`Custom cleanup disabled. This folder will now use global settings.`, 'info')
+      } catch (err) {
+        showToast(err.response?.data?.detail || 'Failed to disable folder custom cleanup', 'error')
+      }
+    }
+  }
+}
+
 onUnmounted(() => {
   stopStatsPolling()
   folderWatcher.stopAll()
@@ -2828,5 +3086,56 @@ onUnmounted(() => {
 @keyframes progressGlow {
   0% { box-shadow: 0 0 2px rgba(6, 182, 212, 0.2); }
   100% { box-shadow: 0 0 6px rgba(6, 182, 212, 0.5); }
+}
+
+/* Sleek Glassmorphic Toggle Switch */
+.switch-toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.switch-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider-round {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  transition: .3s;
+  border-radius: 24px;
+}
+
+.slider-round:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--text-secondary);
+  transition: .3s;
+  border-radius: 50%;
+}
+
+input:checked + .slider-round {
+  background-color: rgba(108, 99, 255, 0.15);
+  border-color: var(--color-primary-light);
+}
+
+input:checked + .slider-round:before {
+  transform: translateX(20px);
+  background-color: var(--color-primary-light);
+  box-shadow: 0 0 8px var(--color-primary);
 }
 </style>

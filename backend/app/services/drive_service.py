@@ -378,3 +378,72 @@ async def download_drive_file(db: AsyncSession, user_id: int, drive_file_id: str
         logger.error("download_drive_file exception for %s: %s", drive_file_id, exc)
 
     return None
+
+
+async def delete_drive_file(access_token: str, file_id: str) -> bool:
+    """Delete a file from Google Drive using its file ID."""
+    url = f"https://www.googleapis.com/drive/v3/files/{file_id}"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.delete(url, headers=headers)
+            if resp.status_code in (200, 204):
+                logger.info(f"Successfully deleted Google Drive file: {file_id}")
+                return True
+            logger.error(f"Failed to delete Google Drive file {file_id}: {resp.status_code} - {resp.text}")
+    except Exception as exc:
+        logger.error(f"Exception during Google Drive file deletion {file_id}: {exc}")
+        
+    return False
+
+
+async def perform_folder_cleanup(access_token: str, drive_folder_id: str, keep_count: int):
+    """Keep only the most recent keep_count images inside drive_folder_id, deleting oldest ones."""
+    if keep_count <= 0 or not drive_folder_id:
+        return
+        
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Performing memory cleanup check on Drive folder {drive_folder_id}. Keeping only recent: {keep_count}")
+    
+    url = "https://www.googleapis.com/drive/v3/files"
+    q = f"'{drive_folder_id}' in parents and trashed = false and mimeType contains 'image/'"
+    params = {
+        "q": q,
+        "fields": "files(id, name, createdTime)",
+        "orderBy": "createdTime asc",  # Oldest first, so we can delete them off the top
+        "pageSize": 1000,
+        "supportsAllDrives": "true",
+        "includeItemsFromAllDrives": "true",
+    }
+    
+    headers = {"Authorization": f"Bearer {access_token}"}
+    
+    try:
+        async with httpx.AsyncClient(timeout=45.0) as client:
+            resp = await client.get(url, headers=headers, params=params)
+            if resp.status_code != 200:
+                logger.error(f"Failed to list files for cleanup: {resp.status_code} - {resp.text}")
+                return
+                
+            files = resp.json().get("files", [])
+            total_count = len(files)
+            logger.info(f"Folder currently has {total_count} files.")
+            
+            if total_count > keep_count:
+                to_delete_count = total_count - keep_count
+                logger.info(f"Exceeds limit by {to_delete_count}. Deleting oldest {to_delete_count} files...")
+                
+                # Delete oldest files first
+                for i in range(to_delete_count):
+                    file_id = files[i]["id"]
+                    file_name = files[i]["name"]
+                    logger.info(f"Deleting oldest file: {file_name} ({file_id})")
+                    await delete_drive_file(access_token, file_id)
+                    
+    except Exception as exc:
+        logger.error(f"Exception during folder cleanup: {exc}")

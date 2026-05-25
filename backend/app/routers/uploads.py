@@ -421,6 +421,46 @@ async def finalize_upload(
     await db.commit()
     await db.refresh(log)
 
+    # ── Google Drive memory efficiency rolling auto-cleanup ──────
+    try:
+        is_cleanup = False
+        keep_count = 50
+        
+        if folder.cleanup_enabled:
+            is_cleanup = True
+            keep_count = folder.cleanup_keep_count
+        else:
+            # Query global config settings
+            result_config = await db.execute(
+                select(DriveConfig).where(DriveConfig.id == folder.drive_config_id)
+            )
+            config = result_config.scalar_one_or_none()
+            if config and config.cleanup_enabled:
+                is_cleanup = True
+                keep_count = config.cleanup_keep_count
+                
+        if is_cleanup and keep_count > 0 and folder.drive_folder_id:
+            from app.services.drive_service import perform_folder_cleanup
+            import asyncio
+            import logging
+            
+            # Execute asynchronously in background to ensure zero upload delay for user
+            asyncio.create_task(
+                perform_folder_cleanup(
+                    access_token=creds["access_token"],
+                    drive_folder_id=folder.drive_folder_id,
+                    keep_count=keep_count
+                )
+            )
+            logging.getLogger(__name__).info(
+                "Triggered background rolling cleanup for Drive folder %s (limit=%d)", 
+                folder.drive_folder_id, 
+                keep_count
+            )
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).error("Failed to check/trigger automatic cleanup: %s", exc)
+
     # ── Enqueue for background face-embedding generation ──────
     try:
         from app.services import face_queue as fq_mod

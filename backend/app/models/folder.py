@@ -18,6 +18,11 @@ class DriveConfig(Base):
     token_expiry = Column(DateTime, nullable=True)
     is_active = Column(Boolean, default=True)
     account_email = Column(String(255), nullable=True)
+    
+    # Automatic Cleanup Settings
+    cleanup_enabled = Column(Boolean, default=False)
+    cleanup_keep_count = Column(Integer, default=50)
+
     created_at = Column(
         DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False
     )
@@ -34,6 +39,11 @@ class WatchedFolder(Base):
     drive_folder_name = Column(String(255), nullable=True)
     drive_config_id = Column(Integer, ForeignKey("drive_configs.id"), nullable=True)
     is_watching = Column(Boolean, default=False)
+    
+    # Folder-specific Cleanup Settings
+    cleanup_enabled = Column(Boolean, default=False)
+    cleanup_keep_count = Column(Integer, default=50)
+
     created_at = Column(
         DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False
     )

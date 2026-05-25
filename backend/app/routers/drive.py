@@ -9,7 +9,7 @@ import httpx
 from app.database import get_db
 from app.models.folder import DriveConfig
 from app.models.user import User
-from app.schemas.folder import DriveConfigRequest, DriveConfigResponse
+from app.schemas.folder import DriveConfigRequest, DriveConfigResponse, DriveConfigUpdateRequest
 from app.services.drive_service import (
     test_drive_connection,
     list_drive_folders,
@@ -155,6 +155,8 @@ async def list_accounts(user_id: int, db: AsyncSession = Depends(get_db)):
                 "error": status.get("error"),
                 "usage_percent": usage_percent,
                 "usage_alert": usage_alert,
+                "cleanup_enabled": config.cleanup_enabled,
+                "cleanup_keep_count": config.cleanup_keep_count,
             }
         )
     accounts.sort(key=lambda a: (not a.get("connected", False), a.get("email", "")))
@@ -193,6 +195,8 @@ async def get_drive_status(user_id: int, drive_config_id: int, db: AsyncSession 
         "error": status.get("error"),
         "folders": folders,
         "usage_percent": usage_percent,
+        "cleanup_enabled": config.cleanup_enabled,
+        "cleanup_keep_count": config.cleanup_keep_count,
     }
 
 
@@ -230,4 +234,30 @@ async def get_drive_config(user_id: int, db: AsyncSession = Depends(get_db)):
     config = result.scalar_one_or_none()
     if not config:
         raise HTTPException(status_code=404, detail="No Drive configuration found")
+    return DriveConfigResponse.model_validate(config)
+
+
+@router.put("/config/{drive_config_id}", response_model=DriveConfigResponse)
+async def update_drive_config(
+    drive_config_id: int,
+    request: DriveConfigUpdateRequest,
+    user_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """Update active Google Drive configuration rolling cleanup settings."""
+    result = await db.execute(
+        select(DriveConfig).where(
+            DriveConfig.id == drive_config_id, DriveConfig.user_id == user_id, DriveConfig.is_active == True
+        )
+    )
+    config = result.scalar_one_or_none()
+    if not config:
+        raise HTTPException(status_code=404, detail="Drive configuration not found")
+        
+    if request.cleanup_enabled is not None:
+        config.cleanup_enabled = request.cleanup_enabled
+    if request.cleanup_keep_count is not None:
+        config.cleanup_keep_count = request.cleanup_keep_count
+        
+    await db.flush()
     return DriveConfigResponse.model_validate(config)

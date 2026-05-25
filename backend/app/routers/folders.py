@@ -18,7 +18,7 @@ from sqlalchemy import select, func
 
 from app.database import get_db
 from app.models.folder import WatchedFolder
-from app.schemas.folder import FolderCreateRequest, FolderResponse
+from app.schemas.folder import FolderCreateRequest, FolderResponse, FolderUpdateRequest
 from app.services.file_monitor import file_monitor
 from app.services.drive_service import (
     get_drive_credentials,
@@ -172,6 +172,8 @@ async def create_folder(
         drive_folder_name=request.drive_folder_name,
         drive_folder_id=drive_folder_id,
         drive_config_id=request.drive_config_id,
+        cleanup_enabled=request.cleanup_enabled or False,
+        cleanup_keep_count=request.cleanup_keep_count or 50,
     )
     db.add(folder)
     await db.flush()
@@ -188,6 +190,36 @@ async def create_folder(
     folder.is_watching = file_monitor.start_watching(folder.id, effective_path)
 
     await db.refresh(folder)
+    return FolderResponse.model_validate(folder)
+
+
+@router.put("/{folder_id}", response_model=FolderResponse)
+async def update_folder(
+    folder_id: int,
+    request: FolderUpdateRequest,
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """Update folder configurations like rolling cleanup settings."""
+    result = await db.execute(
+        select(WatchedFolder).where(
+            WatchedFolder.id == folder_id, WatchedFolder.user_id == user_id
+        )
+    )
+    folder = result.scalar_one_or_none()
+    if not folder:
+        raise HTTPException(status_code=404, detail="Folder not found")
+
+    if request.drive_folder_name is not None:
+        folder.drive_folder_name = request.drive_folder_name
+    if request.is_watching is not None:
+        folder.is_watching = request.is_watching
+    if request.cleanup_enabled is not None:
+        folder.cleanup_enabled = request.cleanup_enabled
+    if request.cleanup_keep_count is not None:
+        folder.cleanup_keep_count = request.cleanup_keep_count
+
+    await db.flush()
     return FolderResponse.model_validate(folder)
 
 
