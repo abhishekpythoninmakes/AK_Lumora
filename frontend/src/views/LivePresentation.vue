@@ -1050,7 +1050,11 @@ async function runUploadWorker(queueItem) {
     try {
       const qVal = compQualityPercent.value !== undefined && compQualityPercent.value !== null ? compQualityPercent.value : 88;
       
-      if (qVal < 98) {
+      // Proactively bypass canvas-based compression for extremely large files (e.g. > 20MB) at high quality settings (>= 80%)
+      // to avoid silent browser canvas memory crashes that yield blank/white images.
+      const isTooLargeForHighQualityCanvas = compressibleBlob.size > 20 * 1024 * 1024 && qVal >= 80;
+
+      if (qVal < 98 && !isTooLargeForHighQualityCanvas) {
         // Build dynamic compression options based on the selected quality percent
         let maxSizeMB = 1.5;
         let maxWidthOrHeight = 2560;
@@ -1089,7 +1093,7 @@ async function runUploadWorker(queueItem) {
         blob = compressedBlob;
         mimeType = 'image/jpeg';
       } else {
-        console.log('[Live] Quality set to 100% (pristine mode). Skipping imageCompression engine.');
+        console.log(`[Live] Skipping imageCompression engine (Quality: ${qVal}%, Size: ${(compressibleBlob.size / 1024 / 1024).toFixed(1)}MB).`);
         blob = compressibleBlob;
       }
       
